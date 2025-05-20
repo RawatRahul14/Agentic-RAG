@@ -23,6 +23,7 @@ def rag_pipeline_page():
 
         # === Avoids unnecessary vectordb creation ===
         if uploaded_file.name != st.session_state["file_name"]:
+
             # === Extracting Data ===
             with st.spinner(text = "Extracting Data..."):
                 try:
@@ -44,13 +45,14 @@ def rag_pipeline_page():
             # === Creating Retriever ===
             with st.spinner(text = "Creating Database..."):
                 try:
+
+                    # === Getting the `file_data` and `file_name` ===
                     file_data = st.session_state["file_data"]
                     file_name = st.session_state["file_name"]
 
                     retriever, chunks = create_retriever(file_data = file_data,
                                                         file_name = file_name)
                     
-
                     # === Cannot create retriever ===
                     if retriever is None:
                         st.warning("Could not create retriever. Please try another file.")
