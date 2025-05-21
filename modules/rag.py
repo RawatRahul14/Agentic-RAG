@@ -1,41 +1,36 @@
 import streamlit as st
 from src.utils.upload import get_file
 from src.components.retriever import create_retriever
+from langchain_core.messages import HumanMessage
+from src.main_graph import build_agentic_rag_graph
 
 def rag_pipeline_page():
     st.header("Agentic RAG")
 
     # === File Uploader ===
-    uploaded_file = st.sidebar.file_uploader("Upload your document file.",
-                                             accept_multiple_files = False,
-                                             type = ["pdf", "txt"],
-                                             key = "rag_file_uploader")
-    
-    # === Extract Data, Creating Database ===
-    if uploaded_file:
+    uploaded_file = st.sidebar.file_uploader(
+        "Upload your document file.",
+        accept_multiple_files=False,
+        type=["pdf", "txt"],
+        key="rag_file_uploader"
+    )
 
-        # === Session State for extracted file data ===
+    # === Extract Data & Create Vector DB ===
+    if uploaded_file:
         if "file_data" not in st.session_state or st.session_state["file_data"] is None:
             st.session_state["file_data"] = ""
             st.session_state["file_name"] = None
             st.session_state["retriever"] = None
             st.session_state["chunks"] = []
 
-        # === Avoids unnecessary vectordb creation ===
         if uploaded_file.name != st.session_state["file_name"]:
-
             with st.sidebar:
-
-                # === Extracting Data ===
-                with st.spinner(text = "Extracting Data..."):
+                # Extract file content
+                with st.spinner(text="Extracting Data..."):
                     try:
-                        file_data = get_file(file = uploaded_file)
-
-                        # === Cannot extract data ===
+                        file_data = get_file(file=uploaded_file)
                         if not file_data.strip():
                             st.warning("Could not extract any text from the document. Please try another file.")
-
-                        # === Extract data ===
                         else:
                             st.session_state["file_data"] = file_data
                             st.session_state["file_name"] = uploaded_file.name
@@ -43,21 +38,15 @@ def rag_pipeline_page():
                     except Exception as e:
                         raise e
 
-                # === Creating Retriever ===
-                with st.spinner(text = "Creating Database..."):
+                # Create retriever
+                with st.spinner(text="Creating Database..."):
                     try:
-
-                        # === Getting the file_data and file_name ===
                         file_data = st.session_state["file_data"]
                         file_name = st.session_state["file_name"]
+                        retriever, chunks = create_retriever(file_data=file_data, file_name=file_name)
 
-                        retriever, chunks = create_retriever(file_data = file_data, file_name = file_name)
-
-                        # === Cannot create retriever ===
                         if retriever is None:
                             st.warning("Could not create retriever. Please try another file.")
-
-                        # === Retriever created ===
                         else:
                             st.session_state["retriever"] = retriever
                             st.session_state["chunks"] = chunks
@@ -65,18 +54,16 @@ def rag_pipeline_page():
                     except Exception as e:
                         raise e
 
-    # === Chat Interface ===
+    # === Initialize Chat History ===
     st.divider()
-
     if "messages" not in st.session_state:
         st.session_state["messages"] = []
 
-    # === Show chat history ===
     for msg in st.session_state["messages"]:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    # === Input box ===
+    # === User Input ===
     user_input = st.chat_input("Ask a question about the document...")
 
     if user_input:
@@ -88,8 +75,28 @@ def rag_pipeline_page():
         with st.chat_message("user"):
             st.markdown(user_input)
 
-        # === Placeholder response, replace with your RAG response ===
-        response = f"🤖 This is a placeholder response for: **{user_input}**"
+        # === Initialize Graph Once ===
+        if "graph" not in st.session_state:
+            st.session_state["graph"] = build_agentic_rag_graph()
+
+        graph = st.session_state["graph"]
+
+        # === Input to LangGraph ===
+        input_data = {
+            "question": HumanMessage(content = user_input),
+            "retriever": st.session_state["retriever"]
+        }
+
+        # === Call the graph ===
+        result = graph.invoke(input = input_data)
+
+        # === Extract AI's response from state
+        response_msg = next(
+            (msg for msg in result["messages"][::-1] if msg.type == "ai"),
+            None
+        )
+
+        response = response_msg.content if response_msg else "⚠️ No answer generated."
 
         st.session_state["messages"].append({"role": "assistant", "content": response})
         with st.chat_message("assistant"):

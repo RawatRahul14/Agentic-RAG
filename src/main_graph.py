@@ -1,4 +1,3 @@
-from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph.state import StateGraph
 from langgraph.graph import END
 
@@ -17,9 +16,6 @@ def build_agentic_rag_graph():
     """
     Builds and returns the compiled Agentic RAG LangGraph.
     """
-    # Initialize the checkpointer (in-memory)
-    checkpointer = MemorySaver()
-
     # Initialize the graph with state schema
     workflow = StateGraph(AgentState)
 
@@ -66,4 +62,4 @@ def build_agentic_rag_graph():
     workflow.set_entry_point("question_rewriter")
 
     # Compile and return the graph
-    return workflow.compile(checkpointer = checkpointer)
+    return workflow.compile()
