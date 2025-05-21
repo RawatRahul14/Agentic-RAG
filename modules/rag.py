@@ -101,3 +101,12 @@ def rag_pipeline_page():
         st.session_state["messages"].append({"role": "assistant", "content": response})
         with st.chat_message("assistant"):
             st.markdown(response)
+
+        retrieved_docs = result.get("documents", [])
+
+        with st.expander("📄 Retrieved Chunks for this Query"):
+            if retrieved_docs:
+                for i, doc in enumerate(retrieved_docs):
+                    st.markdown(f"**Chunk {i+1}:**\n\n{doc.page_content}")
+            else:
+                st.warning("No relevant chunks were retrieved for this query.")
