@@ -29,7 +29,7 @@ def question_rewriter(state: AgentState):
 
         messages = [SystemMessage(
             content = "You are a helpful assistant that rephrases the user's question to be a"
-                      "standalone question optimized for retrieval."
+                      "stand alone question optimized for retrieval."
         )]
 
         # Adding the whole lists of Human an AI interactions
