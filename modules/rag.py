@@ -5,7 +5,7 @@ from src.components.retriever import create_retriever
 def rag_pipeline_page():
     st.header("Agentic RAG")
 
-    # === File Uploader ====
+    # === File Uploader ===
     uploaded_file = st.sidebar.file_uploader("Upload your document file.",
                                              accept_multiple_files = False,
                                              type = ["pdf", "txt"],
@@ -24,43 +24,73 @@ def rag_pipeline_page():
         # === Avoids unnecessary vectordb creation ===
         if uploaded_file.name != st.session_state["file_name"]:
 
-            # === Extracting Data ===
-            with st.spinner(text = "Extracting Data..."):
-                try:
-                    file_data = get_file(file = uploaded_file)
+            with st.sidebar:
 
-                    # === Cannot extract data ===
-                    if not file_data.strip():
-                        st.warning("Could not extract any text from the document. Please try another file.")
+                # === Extracting Data ===
+                with st.spinner(text = "Extracting Data..."):
+                    try:
+                        file_data = get_file(file = uploaded_file)
 
-                    # === Extract data ===
-                    else:
-                        st.session_state["file_data"] = file_data
-                        st.session_state["file_name"] = uploaded_file.name
-                        st.success("Data Extracted Successfully.")
-                
-                except Exception as e:
-                    raise e
+                        # === Cannot extract data ===
+                        if not file_data.strip():
+                            st.warning("Could not extract any text from the document. Please try another file.")
 
-            # === Creating Retriever ===
-            with st.spinner(text = "Creating Database..."):
-                try:
+                        # === Extract data ===
+                        else:
+                            st.session_state["file_data"] = file_data
+                            st.session_state["file_name"] = uploaded_file.name
+                            st.success("Data Extracted Successfully.")
+                    except Exception as e:
+                        raise e
 
-                    # === Getting the `file_data` and `file_name` ===
-                    file_data = st.session_state["file_data"]
-                    file_name = st.session_state["file_name"]
+                # === Creating Retriever ===
+                with st.spinner(text = "Creating Database..."):
+                    try:
 
-                    retriever, chunks = create_retriever(file_data = file_data,
-                                                        file_name = file_name)
-                    
-                    # === Cannot create retriever ===
-                    if retriever is None:
-                        st.warning("Could not create retriever. Please try another file.")
+                        # === Getting the file_data and file_name ===
+                        file_data = st.session_state["file_data"]
+                        file_name = st.session_state["file_name"]
 
-                    # === Retriever created ===
-                    else:
-                        st.session_state["retriever"] = retriever                
-                        st.session_state["chunks"] = chunks         
-                    
-                except Exception as e:
-                    raise e
+                        retriever, chunks = create_retriever(file_data = file_data, file_name = file_name)
+
+                        # === Cannot create retriever ===
+                        if retriever is None:
+                            st.warning("Could not create retriever. Please try another file.")
+
+                        # === Retriever created ===
+                        else:
+                            st.session_state["retriever"] = retriever
+                            st.session_state["chunks"] = chunks
+                            st.success("Database Created Successfully.")
+                    except Exception as e:
+                        raise e
+
+    # === Chat Interface ===
+    st.divider()
+
+    if "messages" not in st.session_state:
+        st.session_state["messages"] = []
+
+    # === Show chat history ===
+    for msg in st.session_state["messages"]:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+
+    # === Input box ===
+    user_input = st.chat_input("Ask a question about the document...")
+
+    if user_input:
+        st.session_state["messages"].append({
+            "role": "user",
+            "content": user_input
+        })
+
+        with st.chat_message("user"):
+            st.markdown(user_input)
+
+        # === Placeholder response, replace with your RAG response ===
+        response = f"🤖 This is a placeholder response for: **{user_input}**"
+
+        st.session_state["messages"].append({"role": "assistant", "content": response})
+        with st.chat_message("assistant"):
+            st.markdown(response)
