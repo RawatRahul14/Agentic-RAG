@@ -1,6 +1,5 @@
 from src.state.agent_state import AgentState
 from langchain_openai import ChatOpenAI
-from src.schema.schemas import GradeDocument
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.prompts import ChatPromptTemplate
 

@@ -6,7 +6,7 @@ def on_topic_router(state: AgentState):
     if on_topic == "yes":
         return "retrieve"
     else:
-        return "off_topic_reponse"
+        return "off_topic_response"
     
 def proceed_router(state: AgentState):
     rephrase_count = state.get("rephrase_count", "")
