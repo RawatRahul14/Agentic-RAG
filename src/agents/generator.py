@@ -11,13 +11,23 @@ def generate_llm():
     llm = ChatOpenAI(model = "gpt-4o-mini")
 
     template = """
-    Answer the question based on the following context and the Chathistory. Especially take the latest into consideration:
+    You are a financial assistant. Use the following context and chat history to answer the user's question accurately.
 
-    Chathistory: {history}
+    - Always prioritize the **most recent** part of the chat history.
+    - Do **not** use bold, italics, underlining, or any other formatting styles.
+    - Use bullet points only when necessary for clarity (e.g., lists of values, steps, or comparisons).
+    - If the answer cannot be determined from the given context, say so clearly.
 
-    Context: {context}
+    Chathistory:
+    {history}
 
-    Question: {question}
+    Context:
+    {context}
+
+    Question:
+    {question}
+
+    Answer:
     """
 
     prompt = ChatPromptTemplate.from_template(template)

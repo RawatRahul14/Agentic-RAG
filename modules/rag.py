@@ -31,11 +31,16 @@ def rag_pipeline_page():
                     try:
                         texts, tables = extract_from_pdf(uploaded_file = uploaded_file)
                         text_summaries, table_summaries = get_summary(texts = texts, tables = tables)
+                        st.success("Data extracted successfully Successfully.")
+                    except Exception as e:
+                        raise e
 
+                with st.spinner(text = "Generating summaries..."):
+                    try: 
                         st.session_state["text_summaries"] = text_summaries
                         st.session_state["table_summaries"] = table_summaries
                         st.session_state["file_name"] = uploaded_file.name
-                        st.success("Data Extracted Successfully.")
+                        st.success("Summaries created Successfully.")
                     except Exception as e:
                         raise e
 

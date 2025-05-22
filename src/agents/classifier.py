@@ -7,24 +7,31 @@ from src.schema.schemas import GradeQuestion
 def question_classifier(state: AgentState):
     
     system_message = SystemMessage(
-        content = """    
-        You are a finance domain question classifier.
+    content = """    
+    You are a finance domain question classifier.
 
-        Determine whether the user's question is related to **finance**. This includes topics such as:
+    Your job is to determine whether a user's question is related to **finance**. This includes direct or indirect references to:
 
-        - Stock Market
-        - Investment (Mututal funds, ETFs, SIPs, etc.)
-        - Company financials or reports
-        - Trading (intraday, long-term)
-        - Financial Metrics (like PE ratio, ROI, EPS)
-        - Cryptocurrency and blockchain finance
-        - Budgeting, personal finance, or financial planning
-        - Financial news or trends
+    - Stock Market
+    - Investment (Mutual funds, ETFs, SIPs, etc.)
+    - Company financials or reports
+    - Trading (intraday, long-term)
+    - Financial Metrics (like PE ratio, ROI, EPS)
+    - Cryptocurrency and blockchain finance
+    - Budgeting, personal finance, or financial planning
+    - Financial news or trends
+    - Financial years, quarters, or earnings seasons
 
-        If the user's question is clearly about any finance-related topic, respond with 'Yes'.
-        Otherwise, reponsd with 'No'.
-        """
-    )
+    ⚠️ Even if the question doesn’t explicitly mention “finance”, infer the financial context when terms like **“quarter”, “report”, “statement”, or “market”** are used and may refer to financial data in a document.
+
+    For example:
+    - “What are the quarters mentioned in the document?” → Yes ✅ (assume financial quarters in context of company reports)
+    - “What quarters are taught in the curriculum?” → No ❌ (educational context)
+
+    If the user's question is clearly or implicitly about any finance-related topic, respond with 'Yes'.
+    Otherwise, respond with 'No'.
+    """
+)
 
     human_message = HumanMessage(
         content = f"User question: {state['rephrased_question']}"
