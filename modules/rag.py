@@ -1,7 +1,7 @@
 import streamlit as st
 from src.utils.get_data import extract_from_pdf
 from src.components.summarizer import get_summary
-from src.components.retriever import create_retriever, create_summary_retriever
+from src.components.retriever import create_summary_retriever
 from langchain_core.messages import HumanMessage
 from src.main_graph import build_agentic_rag_graph
 
@@ -30,17 +30,12 @@ def rag_pipeline_page():
                 with st.spinner(text="Extracting Data..."):
                     try:
                         texts, tables = extract_from_pdf(uploaded_file = uploaded_file)
-                        text_summaries, table_summaries = get_summary(texts = texts, tables = tables)
-                        st.success("Data extracted successfully Successfully.")
-                    except Exception as e:
-                        raise e
 
-                with st.spinner(text = "Generating summaries..."):
-                    try: 
+                        text_summaries, table_summaries = get_summary(texts = texts, tables = tables)
                         st.session_state["text_summaries"] = text_summaries
                         st.session_state["table_summaries"] = table_summaries
                         st.session_state["file_name"] = uploaded_file.name
-                        st.success("Summaries created Successfully.")
+                        st.success("Data Extracted Successfully.")
                     except Exception as e:
                         raise e
 
@@ -106,5 +101,3 @@ def rag_pipeline_page():
         st.session_state["messages"].append({"role": "assistant", "content": response})
         with st.chat_message("assistant"):
             st.markdown(response)
-
-        retrieved_docs = result.get("documents", [])

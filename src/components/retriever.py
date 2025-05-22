@@ -2,9 +2,6 @@ from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
-import uuid
-from langchain.retrievers.multi_vector import MultiVectorRetriever
-from langchain.storage import InMemoryStore
 
 def create_retriever(file_data,
                      file_name):
@@ -38,10 +35,6 @@ def create_retriever(file_data,
     )
 
     return retriever, split_docs
-
-from langchain_core.documents import Document
-from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import Chroma
 
 def create_summary_retriever(
     table_summaries: list,
@@ -84,8 +77,8 @@ def create_summary_retriever(
 
     # Create retriever manually
     retriever = vector_db.as_retriever(
-        search_type="similarity",
-        search_kwargs={"k": 3}
+        search_type="mmr",
+        search_kwargs={"k": 5}
     )
 
     return retriever, documents

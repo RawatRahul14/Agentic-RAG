@@ -1,11 +1,7 @@
-from src.agents.classifier import AgentState
-from typing import TypedDict, List
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
-from langchain.schema import Document
-from pydantic import BaseModel, Field
+from src.state.agent_state import AgentState
+from langchain_core.messages import AIMessage
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
-from langgraph.graph import StateGraph, END
 
 def generate_llm():
     llm = ChatOpenAI(model = "gpt-4o-mini")
@@ -17,6 +13,7 @@ def generate_llm():
     - Do **not** use bold, italics, underlining, or any other formatting styles.
     - Use bullet points only when necessary for clarity (e.g., lists of values, steps, or comparisons).
     - If the answer cannot be determined from the given context, say so clearly.
+    - Also, make sure instead of using $(dollar sign) write dollars
 
     Chathistory:
     {history}
