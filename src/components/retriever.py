@@ -1,40 +1,7 @@
 from langchain_core.documents import Document
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_text_splitters import CharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
-
-def create_retriever(file_data,
-                     file_name):
-
-    # === Change  text to Langchain Document ===
-    docs = Document(page_content = file_data,
-                    metadata = {
-                        "source": file_name
-                    })
-    
-    documents = [docs]
-
-    # === Creating Chunks ===
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size = 200,
-        chunk_overlap = 50
-    )
-
-    split_docs = text_splitter.split_documents(documents = documents)
-
-    # === Creating vector DB ===
-    embeddings = OpenAIEmbeddings()
-    vector_db = Chroma.from_documents(documents = split_docs,
-                                      embedding = embeddings)
-    
-    retriever = vector_db.as_retriever(
-        search_type = "similarity",
-        search_kwargs = {
-            "k": 3
-        }
-    )
-
-    return retriever, split_docs
 
 def create_summary_retriever(
     table_summaries: list,
@@ -42,40 +9,47 @@ def create_summary_retriever(
     collection_name: str = "summary_store",
 ):
     """
-    Creates a Chroma retriever from table and text summaries using manual .add_texts().
-
-    Args:
-        table_summaries (list): List of table-based financial summaries (as strings)
-        text_summaries (list): List of text-based financial summaries (as strings)
-        collection_name (str): Name of the Chroma collection
-        persist_directory (str): Path to persist Chroma DB
+    Creates a Chroma retriever from table and text summaries,
+    splitting each summary into 2 parts to improve retrieval quality.
 
     Returns:
         retriever: A retriever interface from Chroma
         documents: List of Document objects created (with metadata)
     """
-    summaries = table_summaries + text_summaries
 
-    # Create Document objects with minimal metadata
-    documents = [
-        Document(page_content=s, metadata={"source": "table" if i < len(table_summaries) else "text"})
-        for i, s in enumerate(summaries)
-    ]
+    # Combine summaries and determine their types
+    all_summaries = [(s, "table") for s in table_summaries] + [(s, "text") for s in text_summaries]
 
-    # Extract page_content for Chroma text ingestion
+    # Split each summary into 2 chunks
+    splitter = CharacterTextSplitter(
+        chunk_size=300,      # adjust depending on average summary length
+        chunk_overlap=20     # small overlap to retain context
+    )
+
+    documents = []
+    for content, source_type in all_summaries:
+        split_chunks = splitter.split_text(content)
+        for i, chunk in enumerate(split_chunks):  # only take 2 parts per summary
+            documents.append(Document(
+                page_content=chunk,
+                metadata={"source": source_type, "chunk": i + 1}
+            ))
+
+    # Extract content and metadata
     texts = [doc.page_content for doc in documents]
+    metadatas = [doc.metadata for doc in documents]
 
-    # Init embeddings and Chroma DB manually
+    # Initialize Chroma DB
     embeddings = OpenAIEmbeddings()
     vector_db = Chroma(
         collection_name=collection_name,
         embedding_function=embeddings
     )
 
-    # Add texts (instead of using from_documents)
-    vector_db.add_texts(texts=texts, metadatas=[doc.metadata for doc in documents])
+    # Add to Chroma
+    vector_db.add_texts(texts=texts, metadatas=metadatas)
 
-    # Create retriever manually
+    # Return retriever
     retriever = vector_db.as_retriever(
         search_type="mmr",
         search_kwargs={"k": 5}

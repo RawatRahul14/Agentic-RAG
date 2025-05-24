@@ -16,23 +16,49 @@ def get_summary(texts: list, tables: list):
 
     # === Prompt for Tables ===
     table_prompt_text = """   
-    Generate a concise and accurate financial summary of a company's performance in a single paragraph based on the provided table data. \
-    Each row of the table should be individually analyzed, ensuring that all relevant values and trends are considered. The summary should report precise values and trends directly from the data, emphasizing critical metrics such as revenue, profit, growth trends, significant changes, and anomalies. \
-    It must use clear, professional language without jargon, focusing on key aspects like profitability, cash flow, debt levels, and performance ratios. Assumptions or estimates should not be included. \
-    The paragraph should also highlight trends or insights relevant for predictive or comparative queries, such as growth expectations, decline patterns, or industry benchmarks.
+    You are a financial analyst assistant.
 
-    Table Data:
+    You will be given a raw paragraph from a financial press release. Your task is to extract and summarize all key financial metrics and performance insights into a clear and concise paragraph, suitable for inclusion in a fintech chatbot’s response.
+
+    Instructions:
+    - Accurately extract all numerical values: revenue, operating income, margins, net income, and EPS.
+    - Always mention which period the value corresponds to (e.g., Q4 2023, full year 2023).
+    - Include percentage changes (e.g., year-over-year growth) if mentioned.
+    - Report trends (e.g., increases, decreases, or stability) clearly.
+    - Briefly include any management commentary if it provides meaningful context (e.g., focus on cost-cutting or AI).
+    - Ignore corporate PR or fluff (e.g., “the best is yet to come”).
+    - Do NOT fabricate or assume any missing values.
+    - Keep the output as a single, professional paragraph (no bullet points or section headers).
+    - The tone should be factual, formal, and precise.
+
+    Now, summarize the following paragraph:
     {element}
     """
     table_prompt = ChatPromptTemplate.from_template(table_prompt_text)
 
     # === Prompt for Texts ===
     text_prompt_text = """   
-    Based on the following financial discussion or text data, generate a concise single-paragraph summary of the company’s performance. \
-    Carefully extract and report any key metrics such as revenue, net income, margins, growth rates, and financial ratios mentioned. Focus on trends or major changes in financial health, profitability, or strategic shifts. \
-    Use formal and professional tone, and do not add your own interpretations or assumptions.
+    You are a financial analyst assistant.
 
-    Text Data:
+    You will be given a structured financial data table that includes key metrics such as revenues, operating income, margins, net income, other income/expenses, and earnings per share (EPS) for both a specific quarter and the full fiscal year.
+
+    Your task is to generate a clear, concise, and professional paragraph summarizing the financial performance. Follow these guidelines:
+
+    Instructions:
+    - Extract all numerical values accurately and clearly distinguish between **quarterly (e.g., Q4 2023)** and **full-year (e.g., FY 2023)** metrics.
+    - Clearly mention the year-over-year percentage changes if they are available.
+    - Group and summarize related metrics in order:
+    1. **Revenues**
+    2. **Operating Income and Margin**
+    3. **Other Income/Expenses**
+    4. **Net Income and EPS**
+    5. **Make sure you are consistent with formatting** if any
+    - If a metric shows notable growth, decline, or consistency, describe the trend factually.
+    - Do not include any information that is not explicitly present in the table.
+    - Avoid overly promotional or speculative language.
+    - The output must be a **single, continuous paragraph**, written in a professional and factual tone (no bullet points or section headers).
+
+    Here is the table:
     {element}
     """
     text_prompt = ChatPromptTemplate.from_template(text_prompt_text)

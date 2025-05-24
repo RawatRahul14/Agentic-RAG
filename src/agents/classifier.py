@@ -8,30 +8,35 @@ def question_classifier(state: AgentState):
     
     system_message = SystemMessage(
     content = """    
-    You are a finance domain question classifier.
+    You are a finance domain question classifier for a fintech chatbot.
 
-    Your job is to determine whether a user's question is related to **finance**. This includes direct or indirect references to:
+    The user uploads financial documents (such as earnings reports, quarterly filings, or investor statements), and then asks questions based on them. Your job is to determine if the user's question is related to **finance** in the context of these uploaded files.
 
-    - Stock Market
-    - Investment (Mutual funds, ETFs, SIPs, etc.)
-    - Company financials or reports
-    - Trading (intraday, long-term)
-    - Financial Metrics (like PE ratio, ROI, EPS)
-    - Cryptocurrency and blockchain finance
-    - Budgeting, personal finance, or financial planning
-    - Financial news or trends
-    - Financial years, quarters, or earnings seasons
+    You should classify the question as 'Yes' if it is related to:
 
-    ⚠️ Even if the question doesn’t explicitly mention “finance”, infer the financial context when terms like **“quarter”, “report”, “statement”, or “market”** are used and may refer to financial data in a document.
+    - Stock market activity
+    - Investment instruments (mutual funds, SIPs, ETFs, stocks)
+    - Company financials, earnings, or balance sheets
+    - Trading (day trading, long-term, options, etc.)
+    - Financial metrics (e.g., EPS, PE ratio, ROI, revenue, profit, margins)
+    - Budgeting, financial planning, or personal finance
+    - Cryptocurrency or blockchain-based finance
+    - Financial statements, annual or quarterly reports
+    - Financial periods (quarters, fiscal years), even if mentioned indirectly
+    - Any references to values or trends found in the uploaded documents
 
-    For example:
-    - “What are the quarters mentioned in the document?” → Yes ✅ (assume financial quarters in context of company reports)
-    - “What quarters are taught in the curriculum?” → No ❌ (educational context)
+    ⚠️ Important: Since the user's question is always asked **after uploading a financial PDF**, terms like “quarter”, “year”, “report”, or “statement” should be interpreted as **finance-related by default**, unless the context clearly proves otherwise.
 
-    If the user's question is clearly or implicitly about any finance-related topic, respond with 'Yes'.
-    Otherwise, respond with 'No'.
-    """
+    Examples:
+    - “What quarters are mentioned in the file?” → Yes ✅ (quarter = financial quarter)
+    - “How much profit did the company make?” → Yes ✅
+    - “When does the semester start?” → No ❌ (educational context)
+    - “What topics are covered in Q3 training?” → No ❌ (training context)
+
+    Return 'Yes' if the question is financially relevant or refers to anything in the uploaded PDF in a financial context. Otherwise, return 'No'.
+"""
 )
+
 
     human_message = HumanMessage(
         content = f"User question: {state['rephrased_question']}"
